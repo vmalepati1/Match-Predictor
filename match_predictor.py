@@ -5,9 +5,9 @@ from sklearn.datasets import make_regression
 class MatchPredictor:
 
     # Trains the model
-    def train():
+    def train(self):
         pass
 
     # Returns red score and blue score based on the status of the teams from previous matches
-    def predict_scores(red_status, blue_status):
+    def predict_scores(self, red_status, blue_status):
         pass

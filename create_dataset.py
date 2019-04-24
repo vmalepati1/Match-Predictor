@@ -4,7 +4,7 @@ import numpy as np
 def create_dataset(out_filepath : str, tba_api_key : str, year : int):
     # Dataset return lists
     x = []
-    Y = []
+    y = []
 
     # Get all events that happened during the specified year
     events = tba_get_response(tba_api_key, '/events/' + str(year))
@@ -46,13 +46,14 @@ def create_dataset(out_filepath : str, tba_api_key : str, year : int):
             # Input to training contains the statistics of the corresponding alliance color statistics
             # to output followed by the opposing alliance statistics
             x.append(red_input + blue_input)
-            Y.append(red_output)
+            y.append(red_output)
             
             x.append(blue_input + red_input)
-            Y.append(blue_output)
+            y.append(blue_output)
+        break
 
     # Save our dataset to the specified file path
-    np.savez(out_filepath, x, Y)
+    np.savez(out_filepath, x=np.array(x), y=np.array(y))
             
 TBA_KEY = '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM'
-create_dataset('example_dataset/StrongHold.npy', TBA_KEY, 2016)
+create_dataset('example_dataset/StrongHold.npz', TBA_KEY, 2016)

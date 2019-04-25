@@ -1,11 +1,12 @@
 from sklearn.linear_model import LinearRegression
 from match_predictor import MatchPredictor
 import numpy as np
+import matplotlib.pyplot as plt
 
 class MatchLinearRegression(MatchPredictor):
+    
     def __init__(self, dataset_filepath):
-        self.X = np.load(dataset_filepath)['x']
-        self.y = np.load(dataset_filepath)['y']
+        super().__init__(dataset_filepath)
 
     def train(self):
         self.model = LinearRegression()
@@ -20,9 +21,24 @@ class MatchLinearRegression(MatchPredictor):
 
         return self.model.predict(red_score_input), self.model.predict(blue_score_input)
 
+    def visualize(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        number_of_features = len(self.X[0])
+
+        for n in range(0, number_of_features):
+            scatter_x = [i[n] for i in self.X]
+            scatter_y = self.y
+
+            ax.scatter(scatter_x, scatter_y)
+
+        fig.show()
+    
 lr = MatchLinearRegression('example_dataset/StrongHold.npz')
 
 lr.train()
+lr.visualize()
 
 red, blue = lr.predict_scores([ 34, 268, 195, 326, 510,  38, 258, 155, 410, 560,  16, 212, 100, 123,
  515,  ],

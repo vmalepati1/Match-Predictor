@@ -1,5 +1,6 @@
 from ping_tba_api import *
 import numpy as np
+import sys
 
 def create_dataset(out_filepath : str, tba_api_key : str, year : int):
     # Dataset return lists
@@ -11,7 +12,7 @@ def create_dataset(out_filepath : str, tba_api_key : str, year : int):
 
     for event in events:
         event_key = event['key']
-
+        
         for match in tba_get_response(tba_api_key, '/event/' + event_key + '/matches'):
             # List of team keys
             red_team_keys = match['alliances']['red']['team_keys']
@@ -54,6 +55,9 @@ def create_dataset(out_filepath : str, tba_api_key : str, year : int):
 
     # Save our dataset to the specified file path
     np.savez(out_filepath, x=np.array(x), y=np.array(y))
-            
-TBA_KEY = '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM'
-create_dataset('example_dataset/StrongHold.npz', TBA_KEY, 2016)
+
+if sys.argv[1].lower() == 'usage':
+    print('Usage: create_dataset.py out_filepath tba_api_key year')
+    exit()
+
+create_dataset(sys.argv[1], sys.argv[2], int(sys.argv[3]))

@@ -1,7 +1,9 @@
 from sklearn.linear_model import LinearRegression
 from match_predictor import MatchPredictor
+from scrape_alliance_data import *
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 class MatchLinearRegression(MatchPredictor):
     
@@ -11,13 +13,11 @@ class MatchLinearRegression(MatchPredictor):
     def train(self):
         self.model = LinearRegression()
         self.model.fit(self.X, self.y)
+        print('Accuracy: ' + str(self.model.score(self.X, self.y)))
 
     def predict_scores(self, red_status, blue_status):
-        red_score_input = []
-        red_score_input.append(red_status + blue_status)
-        
-        blue_score_input = []
-        blue_score_input.append(blue_status + red_status)
+        red_score_input = np.reshape(red_status + blue_status, (1, 30))
+        blue_score_input = np.reshape(blue_status + red_status, (1, 30))
 
         return self.model.predict(red_score_input), self.model.predict(blue_score_input)
 
@@ -31,19 +31,27 @@ class MatchLinearRegression(MatchPredictor):
             scatter_x = [i[n] for i in self.X]
             scatter_y = self.y
 
+            ax.set_ylabel('Game Points')
             ax.scatter(scatter_x, scatter_y)
 
-        fig.show()
-    
-lr = MatchLinearRegression('example_dataset/StrongHold.npz')
+        plt.show()
+        
+if sys.argv[1].lower() == 'usage':
+    print('Usage: match_linear_regression.py dataset_filepath tba_api_key year event_name current_match match_type')
+    exit()
+
+lr = MatchLinearRegression(dataset_filepath=sys.argv[1])
 
 lr.train()
 lr.visualize()
 
-red, blue = lr.predict_scores([ 34, 268, 195, 326, 510,  38, 258, 155, 410, 560,  16, 212, 100, 123,
- 515,  ],
- [21, 210, 135, 181, 515,  29, 204, 130, 195, 530,  19, 234, 120,
- 175, 520,])
+red_input, blue_input = scrape_alliance_data(tba_api_key=sys.argv[2],
+                                             year=int(sys.argv[3]),
+                                             event_name=sys.argv[4],
+                                             current_match=int(sys.argv[5]),
+                                             match_type=sys.argv[6])
 
-print(red)
-print(blue)
+red_score, blue_score = lr.predict_scores(red_input, blue_input)
+
+print('Red score: ' + str(red_score))
+print('Blue score: ' + str(blue_score))

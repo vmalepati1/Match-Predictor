@@ -9,10 +9,17 @@ def scrape_alliance_data(tba_api_key : str, year : int, event_name : str, curren
             event_key = event['key']
             break
 
+    
+
     # Search for the correct match and return data from each alliance
+
+    current_finds = 0
+    
     for match in tba_get_response(tba_api_key, '/event/' + event_key + '/matches'):
         if match['comp_level'] == match_type:
-            if match['match_number'] == current_match:
+            current_finds += 1
+            
+            if match['match_number'] == current_match and match_type == 'qm' or current_finds == current_match and match_type != 'qm':
                 red_team_keys = match['alliances']['red']['team_keys']
                 blue_team_keys = match['alliances']['blue']['team_keys']
 

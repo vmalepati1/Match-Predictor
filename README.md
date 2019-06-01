@@ -20,6 +20,13 @@ where `current_match` is the number of the current match that you want to predic
 
 The scripts will first output a visualization of the model which you will need to close and then the red and blue scores.
 
+### Example Usage
+`python create_dataset.py example_dataset/DeepSpace.npz YOUR_TBA_API_KEY 2019`
+
+`python match_linear_regression.py example_dataset/DeepSpace.npz YOUR_TBA_API_KEY 2019 "Galileo Division" 1 f`
+
+`python match_deep_learning.py example_dataset/DeepSpace.npz 1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM 2019 "Galileo Division" 1 f`
+
 ### Prerequisites
 Keras==2.2.4
 

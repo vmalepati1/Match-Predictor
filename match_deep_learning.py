@@ -22,10 +22,12 @@ class MatchDeepLearning(MatchPredictor):
         self.model.add(Dense(1, activation='linear'))
 
         # Use Adam optimization
-        self.model.compile(loss='mse', optimizer='adam')
+        self.model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
         # Fit the model
         self.model.fit(self.X, self.y, epochs=5000)
+
+        print('Accuracy: ' + str(self.model.evaluate(self.X, self.y)[1]))
         
     def predict_scores(self, red_status, blue_status):
         red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))

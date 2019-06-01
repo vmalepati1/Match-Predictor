@@ -9,7 +9,6 @@ class MatchDeepLearning(MatchPredictor):
 
     def __init__(self, dataset_filepath):
         super().__init__(dataset_filepath)
-        self.number_of_features = len(self.X[0])
 
     def train(self):
         # Add layers to model
@@ -26,11 +25,11 @@ class MatchDeepLearning(MatchPredictor):
         self.model.compile(loss='mse', optimizer='adam')
 
         # Fit the model
-        self.model.fit(self.X, self.y, epochs=1000)
+        self.model.fit(self.X, self.y, epochs=5000)
         
     def predict_scores(self, red_status, blue_status):
-        red_score_input = np.reshape(red_status + blue_status, (1, 30))
-        blue_score_input = np.reshape(blue_status + red_status, (1, 30))
+        red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))
+        blue_score_input = np.reshape(blue_status + red_status, (1, self.number_of_features))
         
         return self.model.predict(red_score_input), self.model.predict(blue_score_input)
 
@@ -53,7 +52,7 @@ red_input, blue_input = scrape_alliance_data(tba_api_key=sys.argv[2],
                                              current_match=int(sys.argv[5]),
                                              match_type=sys.argv[6])
 
-print(red_input)
+
 red_score, blue_score = dl.predict_scores(red_input, blue_input)
 
 print('Red score: ' + str(red_score))

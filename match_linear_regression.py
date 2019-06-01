@@ -16,18 +16,16 @@ class MatchLinearRegression(MatchPredictor):
         print('Accuracy: ' + str(self.model.score(self.X, self.y)))
 
     def predict_scores(self, red_status, blue_status):
-        red_score_input = np.reshape(red_status + blue_status, (1, 30))
-        blue_score_input = np.reshape(blue_status + red_status, (1, 30))
+        red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))
+        blue_score_input = np.reshape(blue_status + red_status, (1, self.number_of_features))
 
         return self.model.predict(red_score_input), self.model.predict(blue_score_input)
 
     def visualize(self):
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        
-        number_of_features = len(self.X[0])
 
-        for n in range(0, number_of_features):
+        for n in range(0, self.number_of_features):
             scatter_x = [i[n] for i in self.X]
             scatter_y = self.y
 

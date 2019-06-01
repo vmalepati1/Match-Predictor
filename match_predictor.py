@@ -8,6 +8,7 @@ class MatchPredictor:
     def __init__(self, dataset_filepath):
         self.X = np.load(dataset_filepath)['x']
         self.y = np.load(dataset_filepath)['y']
+        self.number_of_features = len(self.X[0])
 
     # Trains the model
     def train(self):

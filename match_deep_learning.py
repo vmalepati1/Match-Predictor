@@ -40,7 +40,7 @@ class MatchDeepLearning(MatchPredictor):
         return
 
 if sys.argv[1].lower() == 'usage':
-    print('Usage: match_deep_learning.py dataset_filepath tba_api_key year event_name current_match match_type')
+    print('Usage: python match_deep_learning.py dataset_filepath tba_api_key year event_name current_match match_type')
     exit()
     
 dl = MatchDeepLearning(dataset_filepath=sys.argv[1])

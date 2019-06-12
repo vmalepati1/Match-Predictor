@@ -35,7 +35,7 @@ class MatchLinearRegression(MatchPredictor):
         plt.show()
         
 if sys.argv[1].lower() == 'usage':
-    print('Usage: match_linear_regression.py dataset_filepath tba_api_key year event_name current_match match_type')
+    print('Usage: python match_linear_regression.py dataset_filepath tba_api_key year event_name current_match match_type')
     exit()
 
 lr = MatchLinearRegression(dataset_filepath=sys.argv[1])

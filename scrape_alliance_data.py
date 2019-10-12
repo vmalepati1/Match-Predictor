@@ -1,25 +1,25 @@
 from ping_tba_api import *
 
-def scrape_alliance_data(tba_api_key : str, year : int, event_name : str, current_match : int, match_type='qm'):
+
+def scrape_alliance_data(tba_api_key: str, year: int, event_name: str, current_match: int, match_type='qm'):
     event_key = ''
-    
+
     # Find the specified event key from event name and year
     for event in tba_get_response(tba_api_key, '/events/' + str(year)):
         if event['name'] == event_name:
             event_key = event['key']
             break
 
-    
-
     # Search for the correct match and return data from each alliance
 
     current_finds = 0
-    
+
     for match in tba_get_response(tba_api_key, '/event/' + event_key + '/matches'):
         if match['comp_level'] == match_type:
             current_finds += 1
-            
-            if match['match_number'] == current_match and match_type == 'qm' or current_finds == current_match and match_type != 'qm':
+
+            if match[
+                'match_number'] == current_match and match_type == 'qm' or current_finds == current_match and match_type != 'qm':
                 red_team_keys = match['alliances']['red']['team_keys']
                 blue_team_keys = match['alliances']['blue']['team_keys']
 

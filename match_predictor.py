@@ -1,6 +1,5 @@
-from sklearn.linear_model import LinearRegression
-from sklearn.datasets import make_regression
 import numpy as np
+
 
 # Abstract class for match scores prediction
 class MatchPredictor:

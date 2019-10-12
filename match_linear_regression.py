@@ -1,12 +1,15 @@
-from sklearn.linear_model import LinearRegression
-from match_predictor import MatchPredictor
-from scrape_alliance_data import *
-import numpy as np
-import matplotlib.pyplot as plt
 import sys
 
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+from match_predictor import MatchPredictor
+from scrape_alliance_data import *
+
+
 class MatchLinearRegression(MatchPredictor):
-    
+
     def __init__(self, dataset_filepath):
         super().__init__(dataset_filepath)
 
@@ -33,9 +36,11 @@ class MatchLinearRegression(MatchPredictor):
             ax.scatter(scatter_x, scatter_y)
 
         plt.show()
-        
+
+
 if sys.argv[1].lower() == 'usage':
-    print('Usage: python match_linear_regression.py dataset_filepath tba_api_key year event_name current_match match_type')
+    print(
+        'Usage: python match_linear_regression.py dataset_filepath tba_api_key year event_name current_match match_type')
     exit()
 
 lr = MatchLinearRegression(dataset_filepath=sys.argv[1])

@@ -1,2 +1,5 @@
-
+.idea/
+venv/
+__pycache__/
 scouting_data/~$Sykes_Scouting_Database_2019.9.0.xlsx
+scouting_data/sentiment/pickled_algos/

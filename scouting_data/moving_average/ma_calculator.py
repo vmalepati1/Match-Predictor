@@ -105,16 +105,20 @@ class MACalculator:
 
             num_prev_matches_needed = self.time_period - len(most_recent_cur_data)
             if num_prev_matches_needed > 0:
-                # New team in this competition that was not in previous competition
                 try:
                     most_recent_prev_data = self.previous_team_dict[team_number][-num_prev_matches_needed:]
                     if len(most_recent_cur_data) > 0:
                         team_most_recent_average_stats = np.average(most_recent_prev_data + most_recent_cur_data,
-                                                                    axis=1)
+                                                                    axis=0)
                     else:
                         team_most_recent_average_stats = np.average(most_recent_prev_data, axis=0)
                 except KeyError or TypeError:
-                    team_known_stats = [current_team_data] + most_recent_cur_data
+                    # New team in this competition that was not in previous competition
+                    if len(most_recent_cur_data) > 0:
+                        team_known_stats = [current_team_data] + most_recent_cur_data
+                    else:
+                        team_known_stats = [current_team_data]
+
                     team_most_recent_average_stats = np.average(team_known_stats, axis=0)
             else:
                 team_most_recent_average_stats = np.average(most_recent_cur_data[-self.time_period:], axis=0)

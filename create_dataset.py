@@ -190,13 +190,13 @@ class DatasetFactory:
             blue_score = match['alliances']['blue']['score']
 
             if self.is_classification:
-                # Classes: 0 = tied, 1 = red won, 2 = blue won
-                match_classification = 0
+                # Classes: 1 = tied, 2 = red won, 2 = blue won
+                match_classification = 1
 
                 if red_score > blue_score:
-                    match_classification = 1
-                elif blue_score > red_score:
                     match_classification = 2
+                elif blue_score > red_score:
+                    match_classification = 3
 
                 self.x.append(red_input + blue_input)
                 self.y.append(match_classification)

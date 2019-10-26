@@ -45,17 +45,6 @@ class MatchClassifier(MatchPredictor):
     def predict_scores(self, red_status, blue_status):
         pass
 
-    def visualize(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        cm_bright = ListedColormap(['#FF0000', '#0000FF'])
-        
-        for n in range(0, self.number_of_features):
-            ax.scatter(self.X_train[:, 0], self.X_train[:, 8], c=self.y_train, cmap=cm_bright, edgecolors='k')
-            # Plot the testing points
-            ax.scatter(self.X_test[:, 0], self.X_test[:, 8], c=self.y_test, cmap=cm_bright, alpha=0.6, edgecolors='k')
-            
-        plt.show()
-
 mc = MatchClassifier('datasets/DaltonDeepSpaceClassification.npz', 0.02)
-mc.visualize()
+print(mc.number_of_features)
+mc.visualize_input_data()

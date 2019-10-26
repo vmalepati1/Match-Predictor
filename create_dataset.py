@@ -80,7 +80,7 @@ class DatasetFactory:
         blue_ma = []
 
         if self.use_scouting_data:
-            data = np.load(self.scouting_input_filepath)
+            data = np.load(self.scouting_input_filepath, allow_pickle=True)
             red_ma = data['red']
             blue_ma = data['blue']
 
@@ -106,7 +106,7 @@ class DatasetFactory:
 
             event_df.set_index('team Number', inplace=True)
 
-        for match in tqdm(self.tba.event_matches(event_key)):
+        for match in self.tba.event_matches(event_key):
             match_number = match['match_number']
 
             # List of team keys
@@ -124,62 +124,67 @@ class DatasetFactory:
             blue_sykes_data = []
 
             # If teams were absent or something else, skip this match
-            try:
-                if self.use_scouting_data:
-                    red_scouting_data = red_ma[match_number]
-                    blue_scouting_data = blue_ma[match_number]
+            #try:
+            if self.use_scouting_data:
+                red_scouting_data = red_ma[match_number]
+                blue_scouting_data = blue_ma[match_number]
 
-                # Team status is nothing but the statistics for the match for the team (ex. how many hatches or cargo placed in Deep Space)
-                for team_key in red_team_keys:
-                    team_status = self.tba.team_status(team_key, event_key)
-                    team_number = self.tba.team(team_key)['team_number']
+            # Team status is nothing but the statistics for the match for the team (ex. how many hatches or cargo placed in Deep Space)
+            for team_key in red_team_keys:
+                team_status = self.tba.team_status(team_key, event_key)
+                team_number = self.tba.team(team_key)['team_number']
 
-                    if self.use_tba_data:
-                        # Number of features has not been set yet
-                        if relevant_sort_order_statistics < 0:
-                            relevant_sort_order_statistics = len(team_status['qual']['sort_order_info'])
+                if self.use_tba_data:
+                    # Number of features has not been set yet
+                    if relevant_sort_order_statistics < 0:
+                        relevant_sort_order_statistics = len(team_status['qual']['sort_order_info'])
 
-                        red_tba_data.append(
-                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
+                    red_tba_data.append(
+                        team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
 
-                    if self.use_sykes_data:
-                        red_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
+                if self.use_sykes_data:
+                    red_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
 
-                for team_key in blue_team_keys:
-                    team_status = self.tba.team_status(team_key, event_key)
-                    team_number = self.tba.team(team_key)['team_number']
+            for team_key in blue_team_keys:
+                team_status = self.tba.team_status(team_key, event_key)
+                team_number = self.tba.team(team_key)['team_number']
 
-                    if self.use_tba_data:
-                        blue_tba_data.append(
-                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
+                if self.use_tba_data:
+                    blue_tba_data.append(
+                        team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
 
-                    if self.use_sykes_data:
-                        blue_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
+                if self.use_sykes_data:
+                    blue_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
 
-                # Perform the indicated statistics operation (sum, average, or median) to combine each team's statistics into one alliance input
-                if self.use_sum:
-                    red_tba_data = np.sum(red_tba_data, axis=0)
-                    red_sykes_data = np.sum(red_sykes_data, axis=0)
-                    blue_tba_data = np.sum(blue_tba_data, axis=0)
-                    blue_sykes_data = np.sum(blue_sykes_data, axis=0)
-                elif self.use_average:
-                    red_tba_data = np.average(red_tba_data, axis=0)
-                    red_sykes_data = np.average(red_sykes_data, axis=0)
-                    blue_tba_data = np.average(blue_tba_data, axis=0)
-                    blue_sykes_data = np.average(blue_sykes_data, axis=0)
-                elif self.use_median:
-                    red_tba_data = np.median(red_tba_data, axis=0)
-                    red_sykes_data = np.median(red_sykes_data, axis=0)
-                    blue_tba_data = np.median(blue_tba_data, axis=0)
-                    blue_sykes_data = np.median(blue_sykes_data, axis=0)
+            # Perform the indicated statistics operation (sum, average, or median) to combine each team's statistics into one alliance input
+            if self.use_sum:
+                red_tba_data = np.sum(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                red_sykes_data = np.sum(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
+                blue_tba_data = np.sum(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                blue_sykes_data = np.sum(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
+            elif self.use_average:
+                red_tba_data = np.average(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                red_sykes_data = np.average(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
+                blue_tba_data = np.average(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                blue_sykes_data = np.average(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
+            elif self.use_median:
+                red_tba_data = np.median(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                red_sykes_data = np.median(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
+                blue_tba_data = np.median(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                blue_sykes_data = np.median(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
 
-                # Flatten red input and blue input arrays to contain all alliance information
-                red_input = np.concatenate((red_tba_data, red_scouting_data, red_sykes_data), axis=None).tolist()
-                blue_input = np.concatenate((blue_tba_data, blue_scouting_data, blue_sykes_data), axis=None).tolist()
-                print(red_input)
-            except:
-                print('Error at event %s match number %d! Skipping...' % (event_short_name, match_number))
-                continue
+            # Flatten red input and blue input arrays to contain all alliance information
+            red_input = np.concatenate((red_tba_data, red_scouting_data, red_sykes_data), axis=None).tolist()
+            blue_input = np.concatenate((blue_tba_data, blue_scouting_data, blue_sykes_data), axis=None).tolist()
+            print(red_scouting_data)
+            print(red_tba_data)
+            print(blue_scouting_data)
+            print(blue_tba_data)
+            print(red_input)
+            print(blue_input)
+            #except:
+                #print('Error at event %s match number %d! Skipping...' % (event_short_name, match_number))
+                #continue
 
             red_score = match['alliances']['red']['score']
             blue_score = match['alliances']['blue']['score']

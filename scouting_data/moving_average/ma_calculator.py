@@ -59,89 +59,91 @@ class MACalculator:
             self.previous_team_dict[team_number].append([float(i) for i in row[2:]])
 
     def calculate_current_mas(self):
-        two_alliances_g = []
+        previous_match_num = int(self.current_td_rows[0][1])
 
-        previous_match_num = 0
+        red_alliance_data = []
+        blue_alliance_data = []
 
         for match_rec in self.current_td_rows:
             current_match_num = int(match_rec[1])
 
             if current_match_num != previous_match_num:
-                two_alliances_g = []
+                if self.team_combination_metric == 's':
+                    red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
+                    blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
+                elif self.team_combination_metric == 'a':
+                    red_alliance_data_metric = np.average(red_alliance_data, axis=0)
+                    blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
+                elif self.team_combination_metric == 'm':
+                    red_alliance_data_metric = np.median(red_alliance_data, axis=0)
+                    blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
+                else:
+                    # User does not desire to condense training features
+                    red_alliance_data_metric = [item for sublist in red_alliance_data for item in sublist]
+                    blue_alliance_data_metric = [item for sublist in blue_alliance_data for item in sublist]
 
-            two_alliances_g.append(match_rec)
+                print(red_alliance_data_metric)
+                print(blue_alliance_data_metric)
+
+                self.red_moving_averages.append(red_alliance_data_metric)
+                self.blue_moving_averages.append(blue_alliance_data_metric)
+
+                print('Processed match number %d' % previous_match_num)
+
+                red_alliance_data = []
+                blue_alliance_data = []
 
             previous_match_num = current_match_num
 
-            red_alliance_data = []
-            blue_alliance_data = []
+            team_number = int(match_rec[0])
+            current_team_data = [float(i) for i in match_rec[2:]]
 
-            for team in two_alliances_g:
-                team_number = int(team[0])
-                current_team_data = [float(i) for i in team[2:]]
+            if team_number not in self.current_team_dict:
+                self.current_team_dict[team_number] = []
 
-                if team_number not in self.current_team_dict:
-                    self.current_team_dict[team_number] = []
+            most_recent_cur_data = self.current_team_dict[team_number]
 
-                most_recent_cur_data = self.current_team_dict[team_number]
-
-                num_prev_matches_needed = self.time_period - len(most_recent_cur_data)
-                if num_prev_matches_needed > 0:
-                    # New team in this competition that was not in previous competition
-                    try:
-                        most_recent_prev_data = self.previous_team_dict[team_number][-num_prev_matches_needed:]
+            num_prev_matches_needed = self.time_period - len(most_recent_cur_data)
+            if num_prev_matches_needed > 0:
+                # New team in this competition that was not in previous competition
+                try:
+                    most_recent_prev_data = self.previous_team_dict[team_number][-num_prev_matches_needed:]
+                    if len(most_recent_cur_data) > 0:
                         team_most_recent_average_stats = np.average(most_recent_prev_data + most_recent_cur_data,
-                                                                    axis=0)
-                    except KeyError:
-                        team_known_stats = most_recent_cur_data + [current_team_data]
-                        team_most_recent_average_stats = np.average(team_known_stats, axis=0)
-                else:
-                    team_most_recent_average_stats = np.average(most_recent_cur_data[-self.time_period:], axis=0)
-
-                red_alliance_teams = \
-                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
-                        'red'][
-                        'team_keys']
-
-                blue_alliance_teams = \
-                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
-                        'blue'][
-                        'team_keys']
-
-                for team_key in red_alliance_teams:
-                    if team_number == self.tba.team(team_key)['team_number']:
-                        red_alliance_data += team_most_recent_average_stats.tolist()
-
-                for team_key in blue_alliance_teams:
-                    if team_number == self.tba.team(team_key)['team_number']:
-                        blue_alliance_data += team_most_recent_average_stats.tolist()
-
-                self.current_team_dict[team_number].append(current_team_data)
-
-            if self.team_combination_metric == 's':
-                red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
-                blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
-            elif self.team_combination_metric == 'a':
-                red_alliance_data_metric = np.average(red_alliance_data, axis=0)
-                blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
-            elif self.team_combination_metric == 'm':
-                red_alliance_data_metric = np.median(red_alliance_data, axis=0)
-                blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
+                                                                    axis=1)
+                    else:
+                        team_most_recent_average_stats = np.average(most_recent_prev_data, axis=0)
+                except KeyError or TypeError:
+                    team_known_stats = [current_team_data] + most_recent_cur_data
+                    team_most_recent_average_stats = np.average(team_known_stats, axis=0)
             else:
-                # User does not desire to condense training features
-                red_alliance_data_metric = red_alliance_data
-                blue_alliance_data_metric = blue_alliance_data
+                team_most_recent_average_stats = np.average(most_recent_cur_data[-self.time_period:], axis=0)
 
-            self.red_moving_averages.append(red_alliance_data_metric)
-            self.blue_moving_averages.append(blue_alliance_data_metric)
+            red_alliance_teams = \
+                self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
+                    'red'][
+                    'team_keys']
 
-            print('Processing match number %d' % current_match_num)
+            blue_alliance_teams = \
+                self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
+                    'blue'][
+                    'team_keys']
+
+            for team_key in red_alliance_teams:
+                if team_number == self.tba.team(team_key)['team_number']:
+                    red_alliance_data.append(team_most_recent_average_stats.tolist())
+
+            for team_key in blue_alliance_teams:
+                if team_number == self.tba.team(team_key)['team_number']:
+                    blue_alliance_data.append(team_most_recent_average_stats.tolist())
+
+            self.current_team_dict[team_number].append(current_team_data)
 
         np.savez(self.output_filepath, red=np.array(self.red_moving_averages),
                  blue=np.array(self.blue_moving_averages))
 
 
-tester = MACalculator('C:\\Users\\malep\\OneDrive\\Documents\\Programming\\Private\\client_secret.json',
+tester = MACalculator('C:\\Users\\Vikas Malepati\\Documents\\Programming\\Private\\client_secret.json',
                       '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM', 2019, '2019gadal',
                       '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0', '10qU_UfaTLN7zof8jTD-Op1uPONufrDcSBPyfDHd2mC4',
                       'scouting_input.npz',

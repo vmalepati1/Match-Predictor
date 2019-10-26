@@ -9,9 +9,14 @@ from scouting_data.cleaning.col_utils import *
 class MACalculator:
 
     def __init__(self, creds_filepath, tba_key, year, event_key, current_td_spreadsheet_id, previous_td_spreadsheet_id,
-                 time_period=3):
+                 team_combination_metric='s', time_period=3):
+        """
+
+        :type team_combination_metric: 's' for sum, 'a' for average, 'm' for median used to condense training features
+        """
         self.year = year
         self.event_key = event_key
+        self.team_combination_metric = team_combination_metric
         self.time_period = time_period
 
         # Use credentials to create client and interact with Google Drive API
@@ -113,13 +118,31 @@ class MACalculator:
 
                 self.current_team_dict[team_number].append(current_team_data)
 
-            self.red_moving_averages.append(red_alliance_data)
-            self.blue_moving_averages.append(blue_alliance_data)
+            if self.team_combination_metric == 's':
+                red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
+                blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
+            elif self.team_combination_metric == 'a':
+                red_alliance_data_metric = np.average(red_alliance_data, axis=0)
+                blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
+            elif self.team_combination_metric == 'm':
+                red_alliance_data_metric = np.median(red_alliance_data, axis=0)
+                blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
+            else:
+                # User does not desire to condense training features
+                red_alliance_data_metric = red_alliance_data
+                blue_alliance_data_metric = blue_alliance_data
+                return
 
-        np.savez('scouting_dataset.npz', red=np.array(self.red_moving_averages),
+            self.red_moving_averages.append(red_alliance_data_metric)
+            self.blue_moving_averages.append(blue_alliance_data_metric)
+
+            print('Processed match number %d' % match_num)
+
+        np.savez('scouting_input.npz', red=np.array(self.red_moving_averages),
                  blue=np.array(self.blue_moving_averages))
 
 
-tester = MACalculator('C:/Users/User/Documents/Programming/Private/client_secret.json',
+tester = MACalculator('C:\\Users\\malep\\OneDrive\\Documents\\Programming\\Private\\client_secret.json',
                       '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM', 2019, '2019gadal',
-                      '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0', '10qU_UfaTLN7zof8jTD-Op1uPONufrDcSBPyfDHd2mC4')
+                      '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0', '10qU_UfaTLN7zof8jTD-Op1uPONufrDcSBPyfDHd2mC4',
+                      team_combination_metric='s')

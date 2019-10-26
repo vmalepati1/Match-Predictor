@@ -85,10 +85,13 @@ class DatasetFactory:
             elif self.whitelist and event_name not in self.whitelist:
                 continue
 
+            event_df = None
+
             # Read in data frame
             if self.use_sykes_data:
                 event_df = pd.read_excel(self.sykes_filepath, sheet_name=event_short_name)
 
+                index = 0
                 # Find and set the proper header of the dataframe as the position of the header is variable
                 for index, row in event_df.iterrows():
                     if str(row[0])[:4] == 'team':
@@ -154,20 +157,20 @@ class DatasetFactory:
 
                     # Perform the indicated statistics operation (sum, average, or median) to combine each team's statistics into one alliance input
                     if self.use_sum:
-                        red_tba_data = np.sum(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
-                        red_sykes_data = np.sum(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
-                        blue_tba_data = np.sum(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
-                        blue_sykes_data = np.sum(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
+                        red_tba_data = np.sum(red_tba_data, axis=0)
+                        red_sykes_data = np.sum(red_sykes_data, axis=0)
+                        blue_tba_data = np.sum(blue_tba_data, axis=0)
+                        blue_sykes_data = np.sum(blue_sykes_data, axis=0)
                     elif self.use_average:
-                        red_tba_data = np.average(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
-                        red_sykes_data = np.average(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
-                        blue_tba_data = np.average(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
-                        blue_sykes_data = np.average(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
+                        red_tba_data = np.average(red_tba_data, axis=0)
+                        red_sykes_data = np.average(red_sykes_data, axis=0)
+                        blue_tba_data = np.average(blue_tba_data, axis=0)
+                        blue_sykes_data = np.average(blue_sykes_data, axis=0)
                     elif self.use_median:
-                        red_tba_data = np.median(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
-                        red_sykes_data = np.median(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
-                        blue_tba_data = np.median(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
-                        blue_sykes_data = np.median(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
+                        red_tba_data = np.median(red_tba_data, axis=0)
+                        red_sykes_data = np.median(red_sykes_data, axis=0)
+                        blue_tba_data = np.median(blue_tba_data, axis=0)
+                        blue_sykes_data = np.median(blue_sykes_data, axis=0)
 
                     # Flatten red input and blue input arrays to contain all alliance information
                     red_input = np.concatenate((red_tba_data, red_sykes_data), axis=None).tolist()
@@ -204,7 +207,7 @@ class DatasetFactory:
         np.savez(self.out_filepath, header=np.array({'is_classification': self.is_classification}), x=np.array(x),
                  y=np.array(y))
 
-    def get_team_sykes_data(self, event_df: object, team_number: int):
+    def get_team_sykes_data(self, event_df, team_number):
         sykes_data = []
 
         for column_name in self.sykes_columns:

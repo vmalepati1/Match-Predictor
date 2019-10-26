@@ -2,12 +2,11 @@ current_team_data = []
 # print(current_team_data)
 
 previous_team_data = []
-previous_team_data.append([1, 2, 3, 4])
-previous_team_data.append([2, 3, 4, 5])
-# print(previous_team_data[-3:])
+previous_team_data += [1, 2, 3, 4]
+previous_team_data += [2, 3, 4, 5]
 
-for i, x in enumerate(previous_team_data, 1):
-    print(i)
-    print(x)
+i = 0
+for i in range(0, 5):
+    print('Yay')
 
-# print(np.average(current_team_data + previous_team_data, axis=0))
+print(i)

@@ -225,7 +225,10 @@ class DatasetFactory:
                 self.process_event(event, relevant_sort_order_statistics)
 
         # Save our dataset to the specified file path
-        np.savez(self.out_filepath, header=np.array({'is_classification': self.is_classification}), x=np.array(self.x),
+        np.savez(self.out_filepath, header=np.array({'use_tba_data' : self.use_tba_data,
+                                                     'use_scouting_data': self.use_scouting_data,
+                                                     'use_sykes_data': self.use_sykes_data,
+                                                     'is_classification': self.is_classification}), x=np.array(self.x),
                  y=np.array(self.y))
 
     def get_team_sykes_data(self, event_df, team_number):

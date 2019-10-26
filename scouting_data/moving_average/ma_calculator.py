@@ -9,13 +9,14 @@ from scouting_data.cleaning.col_utils import *
 class MACalculator:
 
     def __init__(self, creds_filepath, tba_key, year, event_key, current_td_spreadsheet_id, previous_td_spreadsheet_id,
-                 team_combination_metric='s', time_period=3):
+                 output_filepath, team_combination_metric='s', time_period=3):
         """
 
         :type team_combination_metric: 's' for sum, 'a' for average, 'm' for median used to condense training features
         """
         self.year = year
         self.event_key = event_key
+        self.output_filepath = output_filepath
         self.team_combination_metric = team_combination_metric
         self.time_period = time_period
 
@@ -57,22 +58,21 @@ class MACalculator:
 
             self.previous_team_dict[team_number].append([float(i) for i in row[2:]])
 
-    def groupiter(self, thing, n):
-        def countiter(nextthing, thingiter, n):
-            yield nextthing
-            for _ in range(n - 1):
-                yield next(thingiter)
-
-        thingiter = iter(thing)
-        while True:
-            try:
-                nextthing = next(thingiter)
-            except StopIteration:
-                return None
-            yield countiter(nextthing, thingiter, n)
-
     def calculate_current_mas(self):
-        for match_num, two_alliances_g in enumerate(self.groupiter(self.current_td_rows, 6), 1):
+        two_alliances_g = []
+
+        previous_match_num = 0
+
+        for match_rec in self.current_td_rows:
+            current_match_num = int(match_rec[1])
+
+            if current_match_num != previous_match_num:
+                two_alliances_g = []
+
+            two_alliances_g.append(match_rec)
+
+            previous_match_num = current_match_num
+
             red_alliance_data = []
             blue_alliance_data = []
 
@@ -99,12 +99,12 @@ class MACalculator:
                     team_most_recent_average_stats = np.average(most_recent_cur_data[-self.time_period:], axis=0)
 
                 red_alliance_teams = \
-                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=match_num)['alliances'][
+                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
                         'red'][
                         'team_keys']
 
                 blue_alliance_teams = \
-                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=match_num)['alliances'][
+                    self.tba.match(year=self.year, event=self.event_key, type='qm', number=current_match_num)['alliances'][
                         'blue'][
                         'team_keys']
 
@@ -131,18 +131,18 @@ class MACalculator:
                 # User does not desire to condense training features
                 red_alliance_data_metric = red_alliance_data
                 blue_alliance_data_metric = blue_alliance_data
-                return
 
             self.red_moving_averages.append(red_alliance_data_metric)
             self.blue_moving_averages.append(blue_alliance_data_metric)
 
-            print('Processed match number %d' % match_num)
+            print('Processing match number %d' % current_match_num)
 
-        np.savez('scouting_input.npz', red=np.array(self.red_moving_averages),
+        np.savez(self.output_filepath, red=np.array(self.red_moving_averages),
                  blue=np.array(self.blue_moving_averages))
 
 
 tester = MACalculator('C:\\Users\\malep\\OneDrive\\Documents\\Programming\\Private\\client_secret.json',
                       '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM', 2019, '2019gadal',
                       '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0', '10qU_UfaTLN7zof8jTD-Op1uPONufrDcSBPyfDHd2mC4',
+                      'scouting_input.npz',
                       team_combination_metric='s')

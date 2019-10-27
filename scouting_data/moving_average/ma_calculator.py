@@ -58,6 +58,27 @@ class MACalculator:
 
             self.previous_team_dict[team_number].append([float(i) for i in row[2:]])
 
+    def process_alliance_data(self, red_alliance_data, blue_alliance_data):
+        if self.team_combination_metric == 's':
+            red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
+            blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
+        elif self.team_combination_metric == 'a':
+            red_alliance_data_metric = np.average(red_alliance_data, axis=0)
+            blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
+        elif self.team_combination_metric == 'm':
+            red_alliance_data_metric = np.median(red_alliance_data, axis=0)
+            blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
+        else:
+            # User does not desire to condense training features
+            red_alliance_data_metric = [item for sublist in red_alliance_data for item in sublist]
+            blue_alliance_data_metric = [item for sublist in blue_alliance_data for item in sublist]
+
+        print(red_alliance_data_metric)
+        print(blue_alliance_data_metric)
+
+        self.red_moving_averages.append(red_alliance_data_metric)
+        self.blue_moving_averages.append(blue_alliance_data_metric)
+
     def calculate_current_mas(self):
         previous_match_num = int(self.current_td_rows[0][1])
 
@@ -68,25 +89,7 @@ class MACalculator:
             current_match_num = int(match_rec[1])
 
             if current_match_num != previous_match_num:
-                if self.team_combination_metric == 's':
-                    red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
-                    blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
-                elif self.team_combination_metric == 'a':
-                    red_alliance_data_metric = np.average(red_alliance_data, axis=0)
-                    blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
-                elif self.team_combination_metric == 'm':
-                    red_alliance_data_metric = np.median(red_alliance_data, axis=0)
-                    blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
-                else:
-                    # User does not desire to condense training features
-                    red_alliance_data_metric = [item for sublist in red_alliance_data for item in sublist]
-                    blue_alliance_data_metric = [item for sublist in blue_alliance_data for item in sublist]
-
-                print(red_alliance_data_metric)
-                print(blue_alliance_data_metric)
-
-                self.red_moving_averages.append(red_alliance_data_metric)
-                self.blue_moving_averages.append(blue_alliance_data_metric)
+                self.process_alliance_data(red_alliance_data, blue_alliance_data)
 
                 print('Processed match number %d' % previous_match_num)
 
@@ -142,6 +145,8 @@ class MACalculator:
                     blue_alliance_data.append(team_most_recent_average_stats.tolist())
 
             self.current_team_dict[team_number].append(current_team_data)
+
+        self.process_alliance_data(red_alliance_data, blue_alliance_data)
 
         np.savez(self.output_filepath, red=np.array(self.red_moving_averages),
                  blue=np.array(self.blue_moving_averages))

@@ -4,13 +4,17 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from itertools import combinations
+import pickle
 
 # Abstract class for match scores prediction
 class MatchPredictor:
 
-    def __init__(self, dataset_filepath):
-        self.X = np.load(dataset_filepath)['x']
-        self.y = np.load(dataset_filepath)['y']
+    def __init__(self, dataset_filepath, h=0.02):
+        self.h = h
+        dataset = np.load(dataset_filepath, allow_pickle=True)
+        self.X = dataset['x']
+        self.y = dataset['y']
+        self.header = dataset['header'][()]
 
         self.number_of_features = len(self.X[0])
 
@@ -24,31 +28,33 @@ class MatchPredictor:
     def train(self):
         pass
 
-    # Returns red score and blue score based on the status of the teams from previous matches
-    def predict_scores(self, red_status, blue_status):
+    # Prints the predicted outcome (classification or score) given the status of each alliance and the match number
+    def print_predicted_outcome(self, red_status, blue_status, match_num):
         pass
 
     # Visualize the input training and testing data
     def visualize_input_data(self):
         cm_bright = ListedColormap(['#FF0000', '#0000FF'])
 
-        dataset_combs = combinations(range(self.number_of_features // 2), 2)
+        dataset_combs = list(combinations(range(self.number_of_features // 2), 2))
 
         figure = plt.figure(figsize=(27, 9))
 
         i = 1
-        print('test')
         for first_ix, sec_ix in dataset_combs:
-            print('hello')
             ax = plt.subplot(1, len(list(dataset_combs)), i)
+            # Plot the training points
             ax.scatter(self.X_train[:, first_ix], self.X_train[:, sec_ix], c=self.y_train, cmap=cm_bright, edgecolors='k')
             # Plot the testing points
             ax.scatter(self.X_test[:, first_ix], self.X_test[:, sec_ix], c=self.y_test, cmap=cm_bright, alpha=0.6, edgecolors='k')
+            ax.set_title("{} vs {}".format(first_ix, sec_ix))
+            ax.set_xticks(())
+            ax.set_yticks(())
             i += 1
 
         plt.tight_layout()
         plt.show()
 
-    # Visualize the model
-    def visualize_model(self):
-        pass
+    def save(self, filepath):
+        filehandler = open(filepath, 'wb')
+        pickle.dump(self, filehandler)

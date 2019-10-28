@@ -16,6 +16,8 @@ class DatasetFactory:
                             help='filepath to an uncreated or already existing dataset file with extension .NPZ')
         parser.add_argument('tba_api_key', metavar='tba-api-key', type=str,
                             help='your The Blue Alliance key that you can create in your TBA Account Dashboard')
+        parser.add_argument('relevant_sort_order_stats', metavar='relevant-sort-order-stats', type=int, default=-1,
+                            help='number of actual values within sort_orders that excludes any placeholder 0s at the end')
         parser.add_argument('year', type=int, help='the year of the First Robotics Competition game')
         parser.add_argument('-t', '--use-tba-data', action='store_true',
                             help='flag indicating whether to use TBA sort order data in the dataset')
@@ -44,6 +46,7 @@ class DatasetFactory:
 
         self.out_filepath = args.out_filepath
         self.tba_api_key = args.tba_api_key
+        self.relevant_sort_order_stats = args.relevant_sort_order_stats
         self.year = args.year
         self.use_tba_data = args.use_tba_data
         self.use_scouting_data = False
@@ -71,7 +74,7 @@ class DatasetFactory:
         self.tba = tbapy.TBA(self.tba_api_key)
         self.create_dataset()
 
-    def process_event(self, event, relevant_sort_order_statistics):
+    def process_event(self, event):
         event_key = event['key']
         event_short_name = event['short_name']
 
@@ -130,6 +133,8 @@ class DatasetFactory:
                     red_scouting_data = red_ma[match_number - 1]
                     blue_scouting_data = blue_ma[match_number - 1]
 
+                relevant_sort_order_stats = self.relevant_sort_order_stats
+
                 # Team status is nothing but the statistics for the match for the team (ex. how many hatches or cargo placed in Deep Space)
                 for team_key in red_team_keys:
                     team_status = self.tba.team_status(team_key, event_key)
@@ -137,11 +142,11 @@ class DatasetFactory:
 
                     if self.use_tba_data:
                         # Number of features has not been set yet
-                        if relevant_sort_order_statistics < 0:
-                            relevant_sort_order_statistics = len(team_status['qual']['sort_order_info'])
+                        if relevant_sort_order_stats < 0:
+                            relevant_sort_order_stats = len(team_status['qual']['sort_order_info'])
 
                         red_tba_data.append(
-                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
+                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_stats])
 
                     if self.use_sykes_data:
                         red_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
@@ -152,7 +157,7 @@ class DatasetFactory:
 
                     if self.use_tba_data:
                         blue_tba_data.append(
-                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_statistics])
+                            team_status['qual']['ranking']['sort_orders'][:relevant_sort_order_stats])
 
                     if self.use_sykes_data:
                         blue_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
@@ -160,18 +165,24 @@ class DatasetFactory:
                 # Perform the indicated statistics operation (sum, average, or median) to combine each team's statistics into one alliance input
                 if self.use_sum:
                     red_tba_data = np.sum(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                    red_scouting_data = np.sum(red_scouting_data, axis=0) if len(red_scouting_data) > 0 else []
                     red_sykes_data = np.sum(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
                     blue_tba_data = np.sum(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                    blue_scouting_data = np.sum(blue_scouting_data, axis=0) if len(blue_scouting_data) > 0 else []
                     blue_sykes_data = np.sum(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
                 elif self.use_average:
                     red_tba_data = np.average(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                    red_scouting_data = np.average(red_scouting_data, axis=0) if len(red_scouting_data) > 0 else []
                     red_sykes_data = np.average(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
                     blue_tba_data = np.average(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                    blue_scouting_data = np.average(blue_scouting_data, axis=0) if len(blue_scouting_data) > 0 else []
                     blue_sykes_data = np.average(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
                 elif self.use_median:
                     red_tba_data = np.median(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
+                    red_scouting_data = np.median(red_scouting_data, axis=0) if len(red_scouting_data) > 0 else []
                     red_sykes_data = np.median(red_sykes_data, axis=0) if len(red_sykes_data) > 0 else []
                     blue_tba_data = np.median(blue_tba_data, axis=0) if len(blue_tba_data) > 0 else []
+                    blue_scouting_data = np.median(blue_scouting_data, axis=0) if len(blue_scouting_data) > 0 else []
                     blue_sykes_data = np.median(blue_sykes_data, axis=0) if len(blue_sykes_data) > 0 else []
 
                 # Flatten red input and blue input arrays to contain all alliance information
@@ -208,36 +219,40 @@ class DatasetFactory:
         # Get all events that happened during the specified year
         events = self.tba.events(self.year)
 
-        # Number of actual values within sort_orders that excludes any placeholder 0s at the end
-        relevant_sort_order_statistics = -1
-
         if self.whitelist:
             for event_key in self.whitelist:
-                self.process_event(self.tba.event(event_key), relevant_sort_order_statistics)
+                self.process_event(self.tba.event(event_key))
         else:
             for event in events:
                 event_name = event['name']
 
-                # Skip over events in blacklist
-                if event_name in self.blacklist:
-                    continue
+                if self.blacklist:
+                    # Skip over events in blacklist
+                    if event_name in self.blacklist:
+                        continue
 
-                self.process_event(event, relevant_sort_order_statistics)
+                self.process_event(event)
 
         if self.use_sykes_data:
             # Save our dataset to the specified file path with sykes data
-            np.savez(self.out_filepath, header=np.array({'use_tba_data' : self.use_tba_data,
+            np.savez(self.out_filepath, header=np.array({'use_tba_data': self.use_tba_data,
                                                          'use_scouting_data': self.use_scouting_data,
                                                          'use_sykes_data': True,
                                                          'sykes_columns': self.sykes_columns,
-                                                         'is_classification': self.is_classification}), x=np.array(self.x),
+                                                         'is_classification': self.is_classification,
+                                                         'use_sum': self.use_sum,
+                                                         'use_average': self.use_average,
+                                                         'use_median': self.use_median}), x=np.array(self.x),
                      y=np.array(self.y))
         else:
             # Save our dataset to the specified file path without sykes data
-            np.savez(self.out_filepath, header=np.array({'use_tba_data' : self.use_tba_data,
+            np.savez(self.out_filepath, header=np.array({'use_tba_data': self.use_tba_data,
                                                          'use_scouting_data': self.use_scouting_data,
                                                          'use_sykes_data': False,
-                                                         'is_classification': self.is_classification}), x=np.array(self.x),
+                                                         'is_classification': self.is_classification,
+                                                         'use_sum': self.use_sum,
+                                                         'use_average': self.use_average,
+                                                         'use_median': self.use_median}), x=np.array(self.x),
                      y=np.array(self.y))
 
     def get_team_sykes_data(self, event_df, team_number):

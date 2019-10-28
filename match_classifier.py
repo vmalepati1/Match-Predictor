@@ -10,7 +10,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-
+import tbapy
 
 class MatchClassifier(MatchPredictor):
 
@@ -59,7 +59,7 @@ class MatchClassifier(MatchPredictor):
         print('Best classifier score: %f' % self.classifiers[self.best_clf])
 
     def print_predicted_outcome(self, red_status, blue_status, match_num):
-        outcome_classification = self.best_clf.predict(red_status + blue_status)
+        outcome_classification = self.best_clf.predict(self.scaler.transform([red_status + blue_status]))
 
         if outcome_classification == 1:
             print('Match {}: tie'.format(match_num))
@@ -70,8 +70,8 @@ class MatchClassifier(MatchPredictor):
         else:
             print('Match {}: unknown classification id {}'.format(match_num, outcome_classification))
 
-
-cl = MatchClassifier('datasets/DaltonDeepSpaceClassification.npz')
-#mc.visualize_input_data()
-cl.train()
-cl.save('pickled_predictors/DaltonDeepSpaceCL.obj')
+if __name__ == '__main__':
+    cl = MatchClassifier('datasets/DaltonDeepSpaceClassification.npz')
+    #mc.visualize_input_data()
+    cl.train()
+    cl.save('pickled_predictors/DaltonDeepSpaceCL.obj')

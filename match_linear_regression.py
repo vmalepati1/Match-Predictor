@@ -17,17 +17,17 @@ class MatchLinearRegression(MatchPredictor):
         self.model = LinearRegression()
 
     def train(self):
-        self.model.fit(self.X, self.y)
-        print('Accuracy: ' + str(self.model.score(self.X, self.y)))
+        self.model.fit(self.X_train, self.y_train)
+        print('Accuracy: ' + str(self.model.score(self.X_test, self.y_test)))
 
     def print_predicted_outcome(self, red_status, blue_status, match_num):
         red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))
         blue_score_input = np.reshape(blue_status + red_status, (1, self.number_of_features))
 
-        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(red_score_input), self.model.predict(blue_score_input)))
+        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(self.scaler.transform(red_score_input)), self.model.predict(self.scaler.transform(blue_score_input))))
 
-
-lr = MatchLinearRegression('datasets/DaltonDeepSpace.npz')
-#lr.visualize_input_data()
-lr.train()
-lr.save('pickled_predictors/DaltonDeepSpaceLR.obj')
+if __name__ == '__main__':
+    lr = MatchLinearRegression('datasets/DaltonDeepSpace.npz')
+    #lr.visualize_input_data()
+    lr.train()
+    lr.save('pickled_predictors/DaltonDeepSpaceLR.obj')

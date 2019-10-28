@@ -9,7 +9,7 @@ from scouting_data.cleaning.col_utils import *
 class MACalculator:
 
     def __init__(self, creds_filepath, tba_key, year, event_key, current_td_spreadsheet_id, previous_td_spreadsheet_id,
-                 output_filepath, team_combination_metric='s', time_period=3):
+                 output_filepath, time_period=3):
         """
 
         :type team_combination_metric: 's' for sum, 'a' for average, 'm' for median used to condense training features
@@ -17,7 +17,6 @@ class MACalculator:
         self.year = year
         self.event_key = event_key
         self.output_filepath = output_filepath
-        self.team_combination_metric = team_combination_metric
         self.time_period = time_period
 
         # Use credentials to create client and interact with Google Drive API
@@ -59,19 +58,8 @@ class MACalculator:
             self.previous_team_dict[team_number].append([float(i) for i in row[2:]])
 
     def process_alliance_data(self, red_alliance_data, blue_alliance_data):
-        if self.team_combination_metric == 's':
-            red_alliance_data_metric = np.sum(red_alliance_data, axis=0)
-            blue_alliance_data_metric = np.sum(blue_alliance_data, axis=0)
-        elif self.team_combination_metric == 'a':
-            red_alliance_data_metric = np.average(red_alliance_data, axis=0)
-            blue_alliance_data_metric = np.average(blue_alliance_data, axis=0)
-        elif self.team_combination_metric == 'm':
-            red_alliance_data_metric = np.median(red_alliance_data, axis=0)
-            blue_alliance_data_metric = np.median(blue_alliance_data, axis=0)
-        else:
-            # User does not desire to condense training features
-            red_alliance_data_metric = [item for sublist in red_alliance_data for item in sublist]
-            blue_alliance_data_metric = [item for sublist in blue_alliance_data for item in sublist]
+        red_alliance_data_metric = [sublist for sublist in red_alliance_data]
+        blue_alliance_data_metric = [sublist for sublist in blue_alliance_data]
 
         print(red_alliance_data_metric)
         print(blue_alliance_data_metric)
@@ -153,7 +141,6 @@ class MACalculator:
 
 
 tester = MACalculator('C:\\Users\\Vikas Malepati\\Documents\\Programming\\Private\\client_secret.json',
-                      '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM', 2019, '2019gadal',
-                      '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0', '10qU_UfaTLN7zof8jTD-Op1uPONufrDcSBPyfDHd2mC4',
-                      'scouting_input.npz',
-                      team_combination_metric='s')
+                      '1wui0Dih1NifktYrjoXW2hWaMY9XwTfRXaM985Eringd4jeU2raza2nSLXfiALPM', 2019, '2019gacol',
+                      '1AjcObjAlT2uVlupE_DbLNXpNANNNJ9KQvmreb4ksCFg', '1Pgf_6Te2ssrva0vlkLGMnzL7vbWpuBp_JyVZKro43b0',
+                      'scouting_input.npz')

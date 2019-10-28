@@ -24,20 +24,18 @@ class MatchDeepLearning(MatchPredictor):
         self.model.add(Dense(1, activation='linear'))
 
         # Use Adam optimization
-        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
+        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
 
         # Fit the model
-        self.model.fit(self.X, self.y, epochs=5000, verbose=0)
+        self.model.fit(self.X_train, self.y_train, epochs=5000)
 
-        print('Mean squared error: ' + str(self.model.evaluate(self.X, self.y)[1]))
+        print('Mean squared error: ' + str(self.model.evaluate(self.X_test, self.y_test)[1]))
 
     def print_predicted_outcome(self, red_status, blue_status, match_num):
-        red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))
-        blue_score_input = np.reshape(blue_status + red_status, (1, self.number_of_features))
+        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(self.scaler.transform([red_status + blue_status])), self.model.predict(self.scaler.transform([blue_status + red_status]))))
 
-        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(red_score_input), self.model.predict(blue_score_input)))
-
-dl = MatchDeepLearning('datasets/DaltonDeepSpace.npz')
-#dl.visualize_input_data()
-dl.train()
-dl.save('pickled_predictors/DaltonDeepSpaceDL.obj')
+if __name__ == '__main__':
+    dl = MatchDeepLearning('datasets/DaltonDeepSpace.npz')
+    #dl.visualize_input_data()
+    dl.train()
+    dl.save('pickled_predictors/DaltonDeepSpaceDL.obj')

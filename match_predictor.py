@@ -1,10 +1,12 @@
+import pickle
+from itertools import combinations
+
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from itertools import combinations
-import pickle
+
 
 # Abstract class for match scores prediction
 class MatchPredictor:
@@ -44,9 +46,11 @@ class MatchPredictor:
         for first_ix, sec_ix in dataset_combs:
             ax = plt.subplot(1, len(list(dataset_combs)), i)
             # Plot the training points
-            ax.scatter(self.X_train[:, first_ix], self.X_train[:, sec_ix], c=self.y_train, cmap=cm_bright, edgecolors='k')
+            ax.scatter(self.X_train[:, first_ix], self.X_train[:, sec_ix], c=self.y_train, cmap=cm_bright,
+                       edgecolors='k')
             # Plot the testing points
-            ax.scatter(self.X_test[:, first_ix], self.X_test[:, sec_ix], c=self.y_test, cmap=cm_bright, alpha=0.6, edgecolors='k')
+            ax.scatter(self.X_test[:, first_ix], self.X_test[:, sec_ix], c=self.y_test, cmap=cm_bright, alpha=0.6,
+                       edgecolors='k')
             ax.set_title("{} vs {}".format(first_ix, sec_ix))
             ax.set_xticks(())
             ax.set_yticks(())

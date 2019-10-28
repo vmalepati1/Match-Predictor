@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import tbapy
-from tqdm import tqdm
+
 
 class DatasetFactory:
 
@@ -17,18 +17,21 @@ class DatasetFactory:
         parser.add_argument('tba_api_key', metavar='tba-api-key', type=str,
                             help='your The Blue Alliance key that you can create in your TBA Account Dashboard')
         parser.add_argument('relevant_sort_order_stats', metavar='relevant-sort-order-stats', type=int, default=-1,
-                            help='number of actual values within sort_orders that excludes any placeholder 0s at the end')
+                            help='number of actual values within sort_orders that excludes any placeholder 0s at the '
+                                 'end')
         parser.add_argument('year', type=int, help='the year of the First Robotics Competition game')
         parser.add_argument('-t', '--use-tba-data', action='store_true',
                             help='flag indicating whether to use TBA sort order data in the dataset')
         parser.add_argument('-sif', '--scouting-input-filepath', type=str,
-                            help='filepath to a scouting moving averages input file created by ma_calculator.py with extension .npz')
+                            help='filepath to a scouting moving averages input file created by ma_calculator.py with '
+                                 'extension .npz')
         parser.add_argument('-syf', '--sykes-filepath', type=str,
                             help='filepath to a Sykes scouting database Excel file with extension .xlsx')
         parser.add_argument('-syc', '--sykes-columns', nargs='+', type=str, default=['winning Margin', 'win'],
                             help='names of the columns in the Sykes Excel sheet to use as features in the dataset')
         parser.add_argument('-c', '--classification', action='store_true',
-                            help='flag indicating whether the dataset is for winner classification instead of actual score prediction')
+                            help='flag indicating whether the dataset is for winner classification instead of actual '
+                                 'score prediction')
         list_group = parser.add_mutually_exclusive_group()
         list_group.add_argument('-b', '--event-blacklist', nargs='+', type=str,
                                 help='list of official names of events on TBA record to exclude')
@@ -36,11 +39,14 @@ class DatasetFactory:
                                 help='list of official TBA event keys to use only')
         measures_group = parser.add_mutually_exclusive_group()
         measures_group.add_argument('-s', '--sum', action='store_true',
-                                    help="take the sum of each team's statistics for the entire alliance to reduce training features")
+                                    help="take the sum of each team's statistics for the entire alliance to reduce "
+                                         "training features")
         measures_group.add_argument('-a', '--average', action='store_true',
-                                    help="take the average of each team's statistics for the entire alliance to reduce training features")
+                                    help="take the average of each team's statistics for the entire alliance to "
+                                         "reduce training features")
         measures_group.add_argument('-m', '--median', action='store_true',
-                                    help="take the median of each team's statistics for the entire alliance to reduce training features")
+                                    help="take the median of each team's statistics for the entire alliance to reduce "
+                                         "training features")
 
         args = parser.parse_args()
 
@@ -102,7 +108,8 @@ class DatasetFactory:
             event_df = event_df[index + 1:]  # Take the data less the header row
             event_df.columns = new_header  # Set the header row as the dataframe header
 
-            # First column titled 'team Number' is just 'team' in other year datasets, so set it to 'team Number' if it is 'team'
+            # First column titled 'team Number' is just 'team' in other year datasets, so set it to 'team Number' if
+            # it is 'team'
 
             if event_df.columns.values[0] == 'team':
                 event_df.rename(columns={'team': 'team Number'}, inplace=True)
@@ -128,14 +135,15 @@ class DatasetFactory:
                 blue_sykes_data = []
 
                 # If teams were absent or something else, skip this match
-                #try:
+                # try:
                 if self.use_scouting_data:
                     red_scouting_data = red_ma[match_number - 1]
                     blue_scouting_data = blue_ma[match_number - 1]
 
                 relevant_sort_order_stats = self.relevant_sort_order_stats
 
-                # Team status is nothing but the statistics for the match for the team (ex. how many hatches or cargo placed in Deep Space)
+                # Team status is nothing but the statistics for the match for the team (ex. how many hatches or cargo
+                #  placed in Deep Space)
                 for team_key in red_team_keys:
                     team_status = self.tba.team_status(team_key, event_key)
                     team_number = self.tba.team(team_key)['team_number']
@@ -162,7 +170,8 @@ class DatasetFactory:
                     if self.use_sykes_data:
                         blue_sykes_data.append(self.get_team_sykes_data(event_df, team_number))
 
-                # Perform the indicated statistics operation (sum, average, or median) to combine each team's statistics into one alliance input
+                # Perform the indicated statistics operation (sum, average, or median) to combine each team's
+                # statistics into one alliance input
                 if self.use_sum:
                     red_tba_data = np.sum(red_tba_data, axis=0) if len(red_tba_data) > 0 else []
                     red_scouting_data = np.sum(red_scouting_data, axis=0) if len(red_scouting_data) > 0 else []
@@ -188,9 +197,9 @@ class DatasetFactory:
                 # Flatten red input and blue input arrays to contain all alliance information
                 red_input = np.concatenate((red_tba_data, red_scouting_data, red_sykes_data), axis=None).tolist()
                 blue_input = np.concatenate((blue_tba_data, blue_scouting_data, blue_sykes_data), axis=None).tolist()
-                #except:
-                    #print('Error at event %s match number %d! Skipping...' % (event_short_name, match_number))
-                    #continue
+                # except:
+                # print('Error at event %s match number %d! Skipping...' % (event_short_name, match_number))
+                # continue
 
                 red_score = match['alliances']['red']['score']
                 blue_score = match['alliances']['blue']['score']

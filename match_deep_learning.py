@@ -1,8 +1,8 @@
-import numpy as np
 from keras.layers import Dense
 from keras.models import Sequential
 
 from match_predictor import MatchPredictor
+
 
 class MatchDeepLearning(MatchPredictor):
 
@@ -10,7 +10,8 @@ class MatchDeepLearning(MatchPredictor):
         super().__init__(dataset_filepath)
 
         if self.header['is_classification']:
-            raise ValueError('Your dataset must be compiled with the classification flag off to use the deep learning predictor.')
+            raise ValueError(
+                'Your dataset must be compiled with the classification flag off to use the deep learning predictor.')
 
         self.model = Sequential()
 
@@ -32,10 +33,13 @@ class MatchDeepLearning(MatchPredictor):
         print('Mean squared error: ' + str(self.model.evaluate(self.X_test, self.y_test)[1]))
 
     def print_predicted_outcome(self, red_status, blue_status, match_num):
-        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(self.scaler.transform([red_status + blue_status])), self.model.predict(self.scaler.transform([blue_status + red_status]))))
+        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(
+            self.scaler.transform([red_status + blue_status])), self.model.predict(
+            self.scaler.transform([blue_status + red_status]))))
+
 
 if __name__ == '__main__':
-    dl = MatchDeepLearning('datasets/DaltonDeepSpace.npz')
-    #dl.visualize_input_data()
+    dl = MatchDeepLearning('datasets/ColumbusDeepSpace.npz')
+    # dl.visualize_input_data()
     dl.train()
-    dl.save('pickled_predictors/DaltonDeepSpaceDL.obj')
+    dl.save('pickled_predictors/ColumbusDeepSpaceDL.obj')

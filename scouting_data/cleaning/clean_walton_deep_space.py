@@ -12,7 +12,8 @@ class WaltonDeepSpaceCleaner:
 
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description="Quantify and prepare Walton's Deep Space match and pit scouting data and write to an output training spreadsheet.")
+            description="Quantify and prepare Walton's Deep Space match and pit scouting data and write to an output "
+                        "training spreadsheet.")
         parser.add_argument('creds_json_filepath', metavar='creds-json-filepath', type=str,
                             help='filepath to a credentials JSON file created by Google for your service account')
         parser.add_argument('match_scouting_spreadsheet_name', metavar='match-scouting-spreadsheet-name', type=str,
@@ -21,7 +22,8 @@ class WaltonDeepSpaceCleaner:
                             help='the short name for the event of the scouting data')
         parser.add_argument('email', type=str, help='the email to which the output training data will be shared')
         parser.add_argument('-mnc', '--match-number-column-name', type=str,
-                            help='name of the column containing the match numbers (only specify this if your data is not ordered in ascending match number order)')
+                            help='name of the column containing the match numbers (only specify this if your data is '
+                                 'not ordered in ascending match number order)')
 
         args = parser.parse_args()
 

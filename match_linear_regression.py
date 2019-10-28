@@ -1,13 +1,8 @@
-import sys
-
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from match_predictor import MatchPredictor
-from scrape_alliance_data import *
-import pickle
-import math
+
 
 class MatchLinearRegression(MatchPredictor):
 
@@ -24,10 +19,12 @@ class MatchLinearRegression(MatchPredictor):
         red_score_input = np.reshape(red_status + blue_status, (1, self.number_of_features))
         blue_score_input = np.reshape(blue_status + red_status, (1, self.number_of_features))
 
-        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(self.scaler.transform(red_score_input)), self.model.predict(self.scaler.transform(blue_score_input))))
+        print('Match {}: red score {} and blue score {}'.format(match_num, self.model.predict(
+            self.scaler.transform(red_score_input)), self.model.predict(self.scaler.transform(blue_score_input))))
+
 
 if __name__ == '__main__':
-    lr = MatchLinearRegression('datasets/DaltonDeepSpace.npz')
-    #lr.visualize_input_data()
+    lr = MatchLinearRegression('datasets/ColumbusDeepSpace.npz')
+    # lr.visualize_input_data()
     lr.train()
-    lr.save('pickled_predictors/DaltonDeepSpaceLR.obj')
+    lr.save('pickled_predictors/ColumbusDeepSpaceLR.obj')

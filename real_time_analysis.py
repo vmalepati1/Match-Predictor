@@ -1,17 +1,20 @@
 import argparse
 import pickle
+import time
 from collections import OrderedDict
 
+import numpy as np
+import pandas as pd
 import tbapy
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
+
+from scouting_data.cleaning.col_utils import *
+
 from match_classifier import MatchClassifier
 from match_deep_learning import MatchDeepLearning
 from match_linear_regression import MatchLinearRegression
-from scouting_data.cleaning.col_utils import *
-import time
-import numpy as np
-import pandas as pd
+
 
 class MARealTime:
 
@@ -19,25 +22,31 @@ class MARealTime:
         parser = argparse.ArgumentParser(
             description='Analyze an event in real-time using scouting data and optional TBA data or Sykes data.')
 
-        parser.add_argument('predictor_filepath', metavar='predictor-filepath', type=str, help='filepath to a pickled match predictor file')
+        parser.add_argument('predictor_filepath', metavar='predictor-filepath', type=str,
+                            help='filepath to a pickled match predictor file')
         parser.add_argument('tba_api_key', metavar='tba-api-key', type=str,
                             help='your The Blue Alliance key that you can create in your TBA Account Dashboard')
         parser.add_argument('event_key', metavar='event-key', type=str, help='TBA event key of the competition')
-        parser.add_argument('relevant_sort_order_stats', metavar='relevant-sort-order-stats', type=int, default=-1, help='number of actual values within sort_orders that excludes any placeholder 0s at the end')
+        parser.add_argument('relevant_sort_order_stats', metavar='relevant-sort-order-stats', type=int, default=-1,
+                            help='number of actual values within sort_orders that excludes any placeholder 0s at the '
+                                 'end')
         parser.add_argument('comp_year', metavar='comp-year', type=int, help='year of the competition')
-        parser.add_argument('update_wait_time', metavar='--update-wait-time', type=float, default=1.5, help="time between real-time updates")
+        parser.add_argument('update_wait_time', metavar='--update-wait-time', type=float, default=1.5,
+                            help="time between real-time updates")
         parser.add_argument('-nspf', '--no-scouting-data-predictor-filepath', type=str,
                             help="filepath to a predictor trained without scouting data which will be used if a new "
                                  "team showed up in the current competition and wasn't scouted in the previous "
-                                 "competition")
+                                 "competitions")
         parser.add_argument('-gsc', '--google-sheets-creds-filepath', type=str,
                             help='filepath to a credentials JSON file created by Google for your service account')
         parser.add_argument('-csi', '--current-scouting-spreadsheet-id', type=str,
-                            help='the key of the real-time updating scouting spreadsheet shared with your service account')
+                            help='the key of the real-time updating scouting spreadsheet shared with your service '
+                                 'account')
         parser.add_argument('-psi', '--previous-scouting-spreadsheet-ids', nargs='+', type=str,
                             help='sorted priority list of the names of the previous competition scouting spreadsheets '
                                  'shared with your service account which are used as a reference for first matches')
-        parser.add_argument('-map', '--moving-average-time-period', type=int, help="number of a team's previous matches averaged before each prediction")
+        parser.add_argument('-map', '--moving-average-time-period', type=int,
+                            help="number of previous matches averaged per team before each prediction")
         parser.add_argument('-syf', '--sykes-filepath', type=str,
                             help='filepath to a Sykes scouting database Excel file with extension .xlsx')
 
@@ -58,9 +67,11 @@ class MARealTime:
         self.relevant_sort_order_stats = args.relevant_sort_order_stats
         self.comp_year = args.comp_year
 
-        if args.google_sheets_creds_filepath or args.current_scouting_spreadsheet_id or args.previous_scouting_spreadsheet_ids or args.moving_average_time_period:
+        if args.google_sheets_creds_filepath or args.current_scouting_spreadsheet_id \
+                or args.previous_scouting_spreadsheet_ids or args.moving_average_time_period:
             # Mutually inclusive arguments
-            if not args.google_sheets_creds_filepath or not args.current_scouting_spreadsheet_id or not args.previous_scouting_spreadsheet_ids or not args.moving_average_time_period:
+            if not args.google_sheets_creds_filepath or not args.current_scouting_spreadsheet_id \
+                    or not args.previous_scouting_spreadsheet_ids or not args.moving_average_time_period:
                 raise ValueError('-gsc -csi -psi and -map must all be specified if you wish to use scouting data')
 
             self.gs_creds_filepath = args.google_sheets_creds_filepath
@@ -130,7 +141,8 @@ class MARealTime:
                 if not np.array(team_tba_data).any():
                     # Team hasn't played yet, so get their status from their last competition
 
-                    team_tba_data = self.tba.team_status(team, team_last_event['key'])['qual']['ranking']['sort_orders'][:relevant_sort_order_stats]
+                    team_tba_data = self.tba.team_status(team, team_last_event['key'])['qual']['ranking'][
+                                        'sort_orders'][:relevant_sort_order_stats]
 
                 tba_data.append(team_tba_data)
 
@@ -148,7 +160,8 @@ class MARealTime:
                 event_df = event_df[index + 1:]  # Take the data less the header row
                 event_df.columns = new_header  # Set the header row as the dataframe header
 
-                # First column titled 'team Number' is just 'team' in other year datasets, so set it to 'team Number' if it is 'team'
+                # First column titled 'team Number' is just 'team' in other year datasets, so set it to 'team Number'
+                # if it is 'team'
 
                 if event_df.columns.values[0] == 'team':
                     event_df.rename(columns={'team': 'team Number'}, inplace=True)
@@ -177,7 +190,9 @@ class MARealTime:
                             break
 
                     if not found and not self.has_no_scouting_predictor:
-                        raise RuntimeError('Team was not scouted in previous scouting spreadsheets and no fallback predictor was provided')
+                        raise RuntimeError(
+                            'Team was not scouted in previous scouting spreadsheets and no fallback predictor was '
+                            'provided')
                     elif not found and self.has_no_scouting_predictor:
                         use_no_scouting_predictor = True
                         continue
@@ -189,7 +204,8 @@ class MARealTime:
                     else:
                         team_most_recent_average_stats = np.average(most_recent_prev_data, axis=0)
                 else:
-                    team_most_recent_average_stats = np.average(most_recent_cur_data[-self.moving_average_time_period:], axis=0)
+                    team_most_recent_average_stats = np.average(most_recent_cur_data[-self.moving_average_time_period:],
+                                                                axis=0)
 
                 scouting_data.append(team_most_recent_average_stats)
 
@@ -307,8 +323,12 @@ class MARealTime:
                 if current_match_num != previous_match_num:
                     # Print prediction for next match
                     next_match_num = current_match_num + 1
-                    red_alliance_teams = self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)['alliances']['red']['team_keys']
-                    blue_alliance_teams = self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)['alliances']['blue']['team_keys']
+                    red_alliance_teams = \
+                        self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)[
+                            'alliances']['red']['team_keys']
+                    blue_alliance_teams = \
+                        self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)[
+                            'alliances']['blue']['team_keys']
 
                     red_input = self.process_alliance(red_alliance_teams, list_of_previous_event_team_stats)
                     blue_input = self.process_alliance(blue_alliance_teams, list_of_previous_event_team_stats)
@@ -325,17 +345,21 @@ class MARealTime:
             previous_post_time_status = False
 
             while True:
-                current_post_time_status = self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=current_match_num)['post_result_time'] > 0
+                current_post_time_status = \
+                    self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=current_match_num)[
+                        'post_result_time'] > 0
 
                 if current_post_time_status != previous_post_time_status:
                     next_match_num = current_match_num + 1
 
                     red_alliance_teams = \
-                    self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)['alliances'][
-                        'red']['team_keys']
+                        self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)[
+                            'alliances'][
+                            'red']['team_keys']
                     blue_alliance_teams = \
-                    self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)['alliances'][
-                        'blue']['team_keys']
+                        self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)[
+                            'alliances'][
+                            'blue']['team_keys']
 
                     red_input = self.process_alliance(red_alliance_teams)
                     blue_input = self.process_alliance(blue_alliance_teams)
@@ -344,6 +368,7 @@ class MARealTime:
 
                     current_match_num = next_match_num
                     previous_post_time_status = False
+
 
 if __name__ == '__main__':
     app = MARealTime()

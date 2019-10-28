@@ -1,16 +1,16 @@
-from match_predictor import MatchPredictor
-
 import numpy as np
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-import tbapy
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+
+from match_predictor import MatchPredictor
+
 
 class MatchClassifier(MatchPredictor):
 
@@ -33,6 +33,8 @@ class MatchClassifier(MatchPredictor):
             GaussianNB(): 0.0,
             QuadraticDiscriminantAnalysis(): 0.0
         }
+
+        self.best_clf = list(self.classifiers.keys())[0]
 
     def train(self):
         for clf in self.classifiers:
@@ -70,8 +72,9 @@ class MatchClassifier(MatchPredictor):
         else:
             print('Match {}: unknown classification id {}'.format(match_num, outcome_classification))
 
+
 if __name__ == '__main__':
-    cl = MatchClassifier('datasets/DaltonDeepSpaceClassification.npz')
-    #mc.visualize_input_data()
+    cl = MatchClassifier('datasets/ColumbusDeepSpaceClassification.npz')
+    # mc.visualize_input_data()
     cl.train()
-    cl.save('pickled_predictors/DaltonDeepSpaceCL.obj')
+    cl.save('pickled_predictors/ColumbusDeepSpaceCL.obj')

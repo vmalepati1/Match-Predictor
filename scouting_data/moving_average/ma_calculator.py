@@ -10,10 +10,6 @@ class MACalculator:
 
     def __init__(self, creds_filepath, tba_key, year, event_key, current_td_spreadsheet_id, previous_td_spreadsheet_id,
                  output_filepath, time_period=3):
-        """
-
-        :type team_combination_metric: 's' for sum, 'a' for average, 'm' for median used to condense training features
-        """
         self.year = year
         self.event_key = event_key
         self.output_filepath = output_filepath

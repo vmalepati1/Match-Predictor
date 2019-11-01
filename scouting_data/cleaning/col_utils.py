@@ -1,5 +1,8 @@
-# These are the names of columns that are quantifiable and their respective functions that quantify the data they store
-relevant_column_names = {
+from collections import OrderedDict
+
+# These are the names of ordered columns that are quantifiable and their respective functions that quantify the data they store
+
+relevant_column_names = OrderedDict({
     'Robot Number ': 'any2int',
     'Match Number': 'any2int',
     "Did they show up to the match (if they don't show up, fill out 0s for all data)": 'yn2int',
@@ -24,8 +27,7 @@ relevant_column_names = {
     "Description of Speed ": 'speed2int',
     "Other": 'sentiment',
     # "Point Contribution": 'any2int'
-}
-
+})
 
 def num_to_letter(q):
     q = q - 1

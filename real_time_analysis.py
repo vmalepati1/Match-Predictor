@@ -323,6 +323,11 @@ class MARealTime:
                 if current_match_num != previous_match_num:
                     # Print prediction for next match
                     next_match_num = current_match_num + 1
+
+                    if next_match_num > total_num_matches:
+                        print(self.predictor)
+                        return
+
                     red_alliance_teams = \
                         self.tba.match(year=self.comp_year, event=self.event_key, type='qm', number=next_match_num)[
                             'alliances']['red']['team_keys']

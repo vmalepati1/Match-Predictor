@@ -10,6 +10,8 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.svm import LinearSVC
 
+# nltk.download('punkt')
+
 documents_f = open(os.path.join(os.path.dirname(__file__), "pickled_algos/documents.pickle"), "rb")
 documents = pickle.load(documents_f)
 documents_f.close()

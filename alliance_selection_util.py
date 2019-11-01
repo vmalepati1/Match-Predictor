@@ -28,11 +28,13 @@ class AllianceSelectionUtil:
                                  'account')
         parser.add_argument('-lnm', '--last-n-matches', type=int, help="how many last matches of a team to average; if this parameter is not set, all matches will be averaged")
         parser.add_argument('-scn', '--scouting-column-names', nargs='+', type=str, help="column names within the scouting spreadsheet to average for a team's selection ranking")
+        parser.add_argument('-stn', '--self-team-number', type=int, default=2974, help="your own team number to ignore in the rankings")
 
         args = parser.parse_args()
 
         self.tba = tbapy.TBA(args.tba_api_key)
         self.event_key = args.event_key
+        self.self_team_number = args.self_team_number
 
         self.using_tba_data = False
         self.using_scouting_data = False
@@ -112,6 +114,9 @@ class AllianceSelectionUtil:
             team_name = team['nickname']
             team_number = team['team_number']
 
+            if team_number == self.self_team_number:
+                continue
+
             team_name_and_number = '{:>5} | {:>95}'.format(str(team_number), team_name)
 
             if self.using_tba_data:
@@ -134,7 +139,7 @@ class AllianceSelectionUtil:
 
             self.team_rankings_dict[team_name_and_number] = total_ranking
 
-        sorted_teams_by_rank = sorted(self.team_rankings_dict.items(), key=operator.itemgetter(1))
+        sorted_teams_by_rank = sorted(self.team_rankings_dict.items(), key=operator.itemgetter(1), reverse=True)
 
         for rank, (team_identifier, score) in enumerate(sorted_teams_by_rank):
             print('{:>3}. {:>100}'.format(rank + 1, team_identifier))

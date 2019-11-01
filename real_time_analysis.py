@@ -10,6 +10,7 @@ from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
 from scouting_data.cleaning.col_utils import *
+import scouting_data.cleaning.quantifier_funcs as qf
 
 from match_classifier import MatchClassifier
 from match_deep_learning import MatchDeepLearning
@@ -308,15 +309,24 @@ class MARealTime:
                 if current_num_rows != previous_num_rows:
                     last_row = current_rows[current_num_rows - 1]
 
+                    quan_row = []
+
+                    for i, quan_func in zip(relevant_column_indices.values(), relevant_column_names.values()):
+                        val = getattr(qf, quan_func)(last_row[i])
+                        if isinstance(val, (int, float, complex)):
+                            val = int(round(val))
+
+                        quan_row.append(val)
+
                     # Get team number and match number
-                    team_number = int(last_row[0])
-                    current_match_num = int(last_row[1])
+                    team_number = int(quan_row[0])
+                    current_match_num = int(quan_row[1])
 
                     # Update team stats
                     if team_number not in self.current_team_dict:
                         self.current_team_dict[team_number] = []
 
-                    self.current_team_dict[team_number].append([float(i) for i in last_row[2:]])
+                    self.current_team_dict[team_number].append([float(i) for i in quan_row[2:]])
 
                 previous_num_rows = current_num_rows
 
